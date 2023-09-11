@@ -1,39 +1,105 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1
+namespace Isikukood_cs
 {
     public class Program
     {
+        private static List<string> validIdCodes = new List<string>();
+
         public static void Main()
         {
-            Random random = new Random();
-            for (int i = 0; i < 20; i++)
-            {
-                string randomIdCode = GenerateRandomIdCode(random);
-                Console.WriteLine($"genereeritud IdCode: {randomIdCode}");
-                IdCode id = new IdCode(randomIdCode);
+            LoadCodesFromFile();
 
-                if (id.IsValid())
+            while (true)
+            {
+                Console.WriteLine("Valige toiming:");
+                Console.WriteLine("1. Koodide genereerimine");
+                Console.WriteLine("2. Kuva koodide loend");
+                Console.WriteLine("3. Välju");
+                string choice = Console.ReadLine();
+
+                switch (choice)
                 {
-                    Console.WriteLine($"synniaasta: {id.GetFullYear()}");
-                    Console.WriteLine($"synnipaev: {id.GetBirthDate():dd.MM.yyyy}");
-                    string hospital = DetermineHospital(randomIdCode);
-                    Console.WriteLine($"Gospiatal: {hospital}\n");
+                    case "1":
+                        GenerateAndSaveCodes();
+                        break;
+                    case "2":
+                        DisplayIdCodes();
+                        break;
+                    case "3":
+                        SaveCodesToFile();
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("Vale valik. Valige 1, 2 või 3");
+                        break;
                 }
-                else
+            }
+        }
+
+        private static void GenerateAndSaveCodes()
+        {
+            Random random = new Random();
+            Console.Write("Sisestage genereeritavate koodide arv: ");
+            if (int.TryParse(Console.ReadLine(), out int numberOfCodes))
+            {
+                for (int i = 0; i < numberOfCodes; i++)
                 {
-                    Console.WriteLine("Vale IdCode.\n");
+                    string randomIdCode = GenerateRandomIdCode(random);
+                    Console.WriteLine($"genereeritud IdCode: {randomIdCode}");
+                    IdCode id = new IdCode(randomIdCode);
+
+                    if (id.IsValid())
+                    {
+                        Console.WriteLine($"synniaasta: {id.GetFullYear()}");
+                        Console.WriteLine($"synnipaev: {id.GetBirthDate():dd.MM.yyyy}");
+                        string hospital = DetermineHospital(randomIdCode);
+                        Console.WriteLine($"Gospiatal: {hospital}\n");
+
+                        validIdCodes.Add(randomIdCode);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Vale IdCode\n");
+                    }
                 }
+
+                SaveCodesToFile();
+            }
+            else
+            {
+                Console.WriteLine("Vale numbri sisestamine");
+            }
+        }
+
+        private static void SaveCodesToFile()
+        {
+            File.WriteAllLines("idcodes.txt", validIdCodes);
+        }
+
+        private static void LoadCodesFromFile()
+        {
+            if (File.Exists("idcodes.txt"))
+            {
+                validIdCodes = File.ReadAllLines("idcodes.txt").ToList();
+            }
+        }
+
+        private static void DisplayIdCodes()
+        {
+            Console.WriteLine("Õigesti loodud koodide loend:");
+            foreach (string code in validIdCodes)
+            {
+                Console.WriteLine(code);
             }
         }
 
         public static string GenerateRandomIdCode(Random random)
         {
-            // Генерация случайного IdCode
             string genderNumber = random.Next(1, 7).ToString();
             string year = random.Next(0, 100).ToString("D2");
             string month = random.Next(1, 13).ToString("D2");
@@ -102,7 +168,7 @@ namespace ConsoleApp1
             }
             else
             {
-                return "Välismaал";
+                return "Välismaаl";
             }
         }
     }
