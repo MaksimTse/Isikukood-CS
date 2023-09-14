@@ -15,7 +15,193 @@ namespace Isikukood_cs
             _idCode = idCode;
         }
 
-        private bool IsValidLength()
+        private static List<IdCode> validIdCodes = new List<IdCode>();
+
+        public static void Run()
+        {
+            LoadCodesFromFile();
+
+            while (true)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Valige toiming:");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("1. Koodide genereerimine");
+                Console.WriteLine("2. Kuva koodide loend");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("3. Välju");
+                Console.ResetColor();
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        GenerateAndSaveCodes();
+                        break;
+                    case "2":
+                        DisplayIdCodes();
+                        break;
+                    case "3":
+                        SaveCodesToFile();
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("Vale valik. Valige 1, 2 või 3");
+                        break;
+                }
+            }
+        }
+
+        private static void GenerateAndSaveCodes()
+        {
+            Random random = new Random();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("Sisestage genereeritavate koodide arv: ");
+            if (int.TryParse(Console.ReadLine(), out int numberOfCodes))
+            {
+                for (int i = 0; i < numberOfCodes; i++)
+                {
+                    string randomIdCode = GenerateRandomIdCode(random);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"genereeritud IdCode: {randomIdCode}");
+                    IdCode id = new IdCode(randomIdCode);
+
+                    if (id.IsValid())
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine($"synniaasta: {id.GetFullYear()}");
+                        Console.WriteLine($"synnipaev: {id.GetBirthDate():dd.MM.yyyy}");
+                        string hospital = DetermineHospital(randomIdCode);
+                        Console.WriteLine($"Gospiatal: {hospital}\n");
+                        Console.ResetColor();
+
+                        validIdCodes.Add(id); // Добавляем экземпляр IdCode в список
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Vale IdCode\n");
+                        Console.ResetColor();
+                    }
+                }
+
+                SaveCodesToFile();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Vale numbri sisestamine");
+                Console.ResetColor();
+            }
+        }
+
+        private static void SaveCodesToFile()
+        {
+            File.WriteAllLines("idcodes.txt", validIdCodes.Select(code => code._idCode));
+        }
+
+        private static void LoadCodesFromFile()
+        {
+            if (File.Exists("idcodes.txt"))
+            {
+                validIdCodes = File.ReadAllLines("idcodes.txt")
+                    .Select(code => new IdCode(code))
+                    .ToList();
+            }
+        }
+
+        private static void DisplayIdCodes()
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("Õigesti loodud koodide loend:");
+            foreach (var code in validIdCodes)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Kood: {code._idCode}");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"Synniaasta: {code.GetFullYear()}");
+                Console.WriteLine($"Synnipaev: {code.GetBirthDate():dd.MM.yyyy}");
+                string hospital = DetermineHospital(code._idCode);
+                Console.WriteLine($"Gospiatal: {hospital}\n");
+                Console.ResetColor();
+            }
+        }
+
+        public static string GenerateRandomIdCode(Random random)
+        {
+            string genderNumber = random.Next(1, 7).ToString();
+            string year = random.Next(0, 100).ToString("D2");
+            string month = random.Next(1, 13).ToString("D2");
+            string day = random.Next(1, 32).ToString("D2");
+            string randomNumbers = string.Join("", Enumerable.Range(0, 3).Select(_ => random.Next(10).ToString()));
+            string controlNumber = random.Next(10).ToString();
+
+            return $"{genderNumber}{year}{month}{day}{randomNumbers}{controlNumber}";
+        }
+        public static string DetermineHospital(string ikood)
+        {
+            string tahed8910 = ikood.Substring(7, 3);
+            int t = int.Parse(tahed8910);
+
+            if (1 < t && t < 10)
+            {
+                return "Kuressaare Haigla";
+            }
+            else if (11 < t && t < 19)
+            {
+                return "Tartu Ülikooli Naistekliinik, Tartumaa, Tartu";
+            }
+            else if (21 < t && t < 220)
+            {
+                return "Ida-Tallinna Keskhaigla, Pelgulinna sünnitusmaja, Hiiumaa, Keila, Rapla haigla, Loksa haigla";
+            }
+            else if (221 < t && t < 270)
+            {
+                return "Ida-Viru Keskhaigla";
+            }
+            else if (271 < t && t < 370)
+            {
+                return "Maarjamõisa Kliinikum";
+            }
+            else if (371 < t && t < 420)
+            {
+                return "Narva Haigla";
+            }
+            else if (421 < t && t < 470)
+            {
+                return "Pärnu Haigla";
+            }
+            else if (471 < t && t < 490)
+            {
+                return "Pelgulinna Sünnitusmaja";
+            }
+            else if (491 < t && t < 520)
+            {
+                return "Järvamaa Haigla";
+            }
+            else if (521 < t && t < 570)
+            {
+                return "Rakvere, Tapa haigla";
+            }
+            else if (571 < t && t < 600)
+            {
+                return "Valga Haigla";
+            }
+            else if (601 < t && t < 650)
+            {
+                return "Viljandi Haigla";
+            }
+            else if (651 < t && t < 700)
+            {
+                return "Lõuna-Eesti Haigla (Võru), Põlva Haigla";
+            }
+            else
+            {
+                return "Välismaаl";
+            }
+        }
+
+    private bool IsValidLength()
         {
             return _idCode.Length == 11;
         }
